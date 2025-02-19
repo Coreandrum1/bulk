@@ -7,6 +7,52 @@ function App() {
   const [messageHistory, setMessageHistory] = useState<Message[]>([]);
   const [message, setMessage] = useState<string>("");
 
+  const sendMessage = async () => {
+    const response = await fetch("http://localhost:3000/api/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer sk-d4e52610c13b4ab295a93201cd84fca7",
+      },
+      body: JSON.stringify({
+        model: "deepseek-r1:8b",
+        messages: [
+          ...messageHistory,
+          {
+            role: "user",
+            content: message,
+          },
+        ],
+      }),
+    });
+
+    const data = await response.json();
+    console.log(data);
+
+    const responseMessage = data.choices[0].message.content;
+    const findThink = responseMessage.indexOf("<think>");
+    const findThinkEnd = responseMessage.indexOf("</think>");
+    const otherMessage =
+      responseMessage.slice(0, findThink) +
+      responseMessage.slice(findThinkEnd + 8);
+
+    const newMessageHistory: Message[] = [
+      ...messageHistory,
+      {
+        content: message,
+        role: "user",
+        id: new Date().toISOString(),
+      },
+      {
+        content: otherMessage,
+        role: "assistant",
+        id: new Date().toISOString() + "bot",
+      },
+    ];
+
+    setMessageHistory(newMessageHistory);
+  };
+
   return (
     <main>
       <section className="title">
@@ -21,9 +67,9 @@ function App() {
           .slice(0)
           .reverse()
           .map((message) => {
-            return message.type === "user" ? (
+            return message.role === "user" ? (
               <div key={message.id} className="user">
-                {message.message}
+                {message.content}
               </div>
             ) : (
               <TypeWriterContainer key={message.id} message={message} />
@@ -40,20 +86,7 @@ function App() {
           <button
             onClick={(e) => {
               e.preventDefault();
-              setMessageHistory([
-                ...messageHistory,
-                {
-                  message: message,
-                  type: "user",
-                  id: new Date().toISOString(),
-                },
-                {
-                  message:
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
-                  type: "bot",
-                  id: new Date().toISOString() + "bot",
-                },
-              ]);
+              sendMessage();
               setMessage("");
             }}
           >

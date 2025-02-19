@@ -79,7 +79,7 @@ main {
     padding: 0.5rem 1rem;
   }
 
-  .bot {
+  .assistant {
     align-self: flex-start;
     width: auto;
     border-radius: 8px 8px 8px 0px;
